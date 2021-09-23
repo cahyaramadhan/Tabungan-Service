@@ -12,16 +12,16 @@ import javax.persistence.*;
 public class Tabungan {
     @Id
     @SequenceGenerator(
-            name = "nomor_nasabah_sequence",
-            sequenceName = "nomor_nasabah_sequence",
+            name = "nomor_rekening_sequence",
+            sequenceName = "nomor_rekening_sequence",
             allocationSize = 1
     )
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
-            generator = "nomor_nasabah_sequence"
+            generator = "nomor_rekening_sequence"
     )
-    private Integer nomorNasabah;
-    private Integer jumlah;
-    private String jenis;
+    private Integer nomorRekening;
+    private Long saldo;
+    private String jenisTabungan;
 
 }

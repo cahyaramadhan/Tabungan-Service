@@ -4,17 +4,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 @Service
 public class TabunganService {
     private final TabunganRepository tabunganRepository;
+    private Status status;
 
     @Autowired
-    public TabunganService(TabunganRepository tabunganRepository) {
+    public TabunganService(TabunganRepository tabunganRepository, Status status) {
         this.tabunganRepository = tabunganRepository;
+        this.status = status;
     }
 
     public List<Tabungan> getTabungan() {
@@ -34,39 +35,112 @@ public class TabunganService {
     }
 
     @Transactional
-    public void updateTabungan(Integer nomorNasabah, Integer jumlah, String jenis) {
+    public void updateTabungan(Integer nomorNasabah, Long jumlah, String jenis) {
         Tabungan tabungan = tabunganRepository.findById(nomorNasabah)
                 .orElseThrow(() -> new IllegalStateException("Tidak terdapat tabungan dengan nomor nasabah: " + nomorNasabah));
 
         if(jumlah != null) {
-            tabungan.setJumlah(jumlah);
+            tabungan.setSaldo(jumlah);
         }
 
         if(jenis != null && jenis.length() > 0) {
-            tabungan.setJenis(jenis);
+            tabungan.setJenisTabungan(jenis);
         }
     }
 
     @Transactional
-    public void updateJumlah(Integer nomorNasabah, String operator, Integer jumlah) {
-        Tabungan tabungan = tabunganRepository.findById(nomorNasabah)
-                .orElseThrow(() -> new IllegalStateException("Tidak terdapat tabungan dengan nomor nasabah: " + nomorNasabah));
+    public HashMap<String, Object> kurangiSaldo(Integer nomorRekening, Long jumlah) {
+        Tabungan tabungan = tabunganRepository.findById(nomorRekening)
+                .orElseThrow(() -> new IllegalStateException("Tidak terdapat tabungan dengan nomor rekening: " + nomorRekening));
 
-        Integer hasil = 0;
+        HashMap<String, Object> response = new HashMap<>();
 
-        if(Objects.equals(operator, "tambah")) {
-            hasil = tabungan.getJumlah() + jumlah;
-            tabungan.setJumlah(hasil);
-        } else if(Objects.equals(operator, "kurang")){
-            hasil = tabungan.getJumlah() - jumlah;
-            if(hasil < 0) {
-                throw new IllegalStateException("Jumlah tidak bisa lebih besar dari jumlah tabungan");
-            } else {
-                tabungan.setJumlah(hasil);
-            }
+        if(tabungan == null) {
+            response.put("status", status.getStatusRekeningNull());
+            response.put("message", status.getMessageRekeningNull(nomorRekening));
+        } else if(jumlah > tabungan.getSaldo()) {
+            response.put("status", status.getStatusSaldoKurang());
+            response.put("message", status.getMessageSaldoKurang());
         } else {
-            throw new IllegalStateException("Operator tidak terdaftar. Operator yang tersedia: \"tambah\" or \"kurang\"");
+            tabungan.setSaldo(tabungan.getSaldo() - jumlah);
+            response.put("status", status.getStatusSuccess());
         }
+        return response;
+    }
 
+    @Transactional
+    public HashMap<String, Object> tambahSaldo(Integer nomorRekening, Long jumlah) {
+        Tabungan tabungan = tabunganRepository.findById(nomorRekening)
+                .orElseThrow(() -> new IllegalStateException("Tidak terdapat tabungan dengan nomor rekening: " + nomorRekening));
+
+        HashMap<String, Object> response = new HashMap<>();
+
+        if(tabungan == null) {
+            response.put("status", status.getStatusRekeningNull());
+            response.put("message", status.getMessageRekeningNull(nomorRekening));
+        } else {
+            tabungan.setSaldo(tabungan.getSaldo() + jumlah);
+            response.put("status", status.getStatusSuccess());
+        }
+        return response;
+    }
+
+    @Transactional
+    public HashMap<String, Object> transfer(Integer pengirim, Integer penerima, Long jumlah) {
+        Tabungan tabunganPengirim = tabunganRepository.findById(pengirim)
+                .orElseThrow(() -> new IllegalStateException("Tidak terdapat tabungan dengan nomor rekening: " + pengirim));
+        Tabungan tabunganPenerima = tabunganRepository.findById(penerima)
+                .orElseThrow(() -> new IllegalStateException("Tidak terdapat tabungan dengan nomor rekening: " + penerima));
+
+        HashMap<String, Object> response = new HashMap<>();
+
+        if(tabunganPengirim.getSaldo() >= jumlah) {
+            tambahSaldo(tabunganPenerima.getNomorRekening(), jumlah);
+            kurangiSaldo(tabunganPengirim.getNomorRekening(), jumlah);
+            response.put("status", status.getStatusSuccess());
+            response.put("message", status.getMessageSuccessTransfer(pengirim, penerima, jumlah));
+        } else {
+            response.put("status", status.getStatusSaldoKurang());
+            response.put("message", status.getMessageSaldoKurang());
+        }
+        return response;
+    }
+
+    @Transactional
+    public HashMap<String, Object> tarikUang(Integer nomorRekening, Long jumlah) {
+        Tabungan tabungan = tabunganRepository.findById(nomorRekening)
+                .orElseThrow(() -> new IllegalStateException("Tidak terdapat tabungan dengan nomor rekening: " + nomorRekening));
+
+        HashMap<String, Object> response = new HashMap<>();
+
+        if(tabungan == null) {
+            response.put("status", status.getStatusRekeningNull());
+            response.put("message", status.getMessageRekeningNull(nomorRekening));
+        } else if(jumlah > tabungan.getSaldo()) {
+            response.put("status", status.getStatusSaldoKurang());
+            response.put("message", status.getMessageSaldoKurang());
+        } else {
+            tabungan.setSaldo(tabungan.getSaldo() - jumlah);
+            response.put("status", status.getStatusSuccess());
+            response.put("message", status.getMessageSuccessTarik(jumlah));
+        }
+        return response;
+    }
+
+    public HashMap<String, Object> tabung(Integer nomorRekening, Long jumlah) {
+        Tabungan tabungan = tabunganRepository.findById(nomorRekening)
+                .orElseThrow(() -> new IllegalStateException("Tidak terdapat tabungan dengan nomor rekening: " + nomorRekening));
+
+        HashMap<String, Object> response = new HashMap<>();
+
+        if(tabungan == null) {
+            response.put("status", status.getStatusRekeningNull());
+            response.put("message", status.getMessageRekeningNull(nomorRekening));
+        } else {
+            tabungan.setSaldo(tabungan.getSaldo() + jumlah);
+            response.put("status", status.getStatusSuccess());
+            response.put("message", status.getMessageSuccessTabung(jumlah));
+        }
+        return response;
     }
 }
