@@ -49,6 +49,15 @@ public class TabunganService {
     }
 
     @Transactional
+    public HashMap<String, Object> tarikUang(Integer nomorRekening, Long jumlah) {
+        HashMap<String, Object> response = kurangiSaldo(nomorRekening, jumlah);
+        if(response.get("status").equals(status.getStatusSuccess())) {
+            response.put("message", status.getMessageSuccessTarik(jumlah));
+        }
+        return response;
+    }
+
+    @Transactional
     public HashMap<String, Object> kurangiSaldo(Integer nomorRekening, Long jumlah) {
         Tabungan tabungan = tabunganRepository.findById(nomorRekening)
                 .orElseThrow(() -> new IllegalStateException("Tidak terdapat tabungan dengan nomor rekening: " + nomorRekening));
@@ -64,6 +73,16 @@ public class TabunganService {
         } else {
             tabungan.setSaldo(tabungan.getSaldo() - jumlah);
             response.put("status", status.getStatusSuccess());
+            response.put("message", status.getMessageSuccessTarik(jumlah));
+        }
+        return response;
+    }
+
+    @Transactional
+    public HashMap<String, Object> tabung(Integer nomorRekening, Long jumlah) {
+        HashMap<String, Object> response = tambahSaldo(nomorRekening, jumlah);
+        if(response.get("status").equals(status.getStatusSuccess())) {
+            response.put("message", status.getMessageSuccessTabung(jumlah));
         }
         return response;
     }
@@ -81,6 +100,7 @@ public class TabunganService {
         } else {
             tabungan.setSaldo(tabungan.getSaldo() + jumlah);
             response.put("status", status.getStatusSuccess());
+            response.put("message", status.getMessageSuccessTabung(jumlah));
         }
         return response;
     }
@@ -106,40 +126,12 @@ public class TabunganService {
         return response;
     }
 
-    @Transactional
-    public HashMap<String, Object> tarikUang(Integer nomorRekening, Long jumlah) {
-        Tabungan tabungan = tabunganRepository.findById(nomorRekening)
-                .orElseThrow(() -> new IllegalStateException("Tidak terdapat tabungan dengan nomor rekening: " + nomorRekening));
-
-        HashMap<String, Object> response = new HashMap<>();
-
-        if(tabungan == null) {
-            response.put("status", status.getStatusRekeningNull());
-            response.put("message", status.getMessageRekeningNull(nomorRekening));
-        } else if(jumlah > tabungan.getSaldo()) {
-            response.put("status", status.getStatusSaldoKurang());
-            response.put("message", status.getMessageSaldoKurang());
-        } else {
-            tabungan.setSaldo(tabungan.getSaldo() - jumlah);
-            response.put("status", status.getStatusSuccess());
-            response.put("message", status.getMessageSuccessTarik(jumlah));
-        }
-        return response;
-    }
-
-    public HashMap<String, Object> tabung(Integer nomorRekening, Long jumlah) {
-        Tabungan tabungan = tabunganRepository.findById(nomorRekening)
-                .orElseThrow(() -> new IllegalStateException("Tidak terdapat tabungan dengan nomor rekening: " + nomorRekening));
-
-        HashMap<String, Object> response = new HashMap<>();
-
-        if(tabungan == null) {
-            response.put("status", status.getStatusRekeningNull());
-            response.put("message", status.getMessageRekeningNull(nomorRekening));
-        } else {
-            tabungan.setSaldo(tabungan.getSaldo() + jumlah);
-            response.put("status", status.getStatusSuccess());
-            response.put("message", status.getMessageSuccessTabung(jumlah));
+    public HashMap<String, Object> transferFailed(HashMap<String, Object> response, String akun, Integer statusCode) {
+        response.put("status", statusCode);
+        if(statusCode == status.getStatusAkunTidakTerdaftar()) {
+            response.put("message", "Akun " + akun + " tidak valid");
+        } else if (statusCode == status.getStatusAkunDiblokir()) {
+            response.put("message", "Akun " + akun + " diblokir");
         }
         return response;
     }

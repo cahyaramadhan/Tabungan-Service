@@ -2,11 +2,7 @@ package com.bank.tabungan;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClient.*;
-import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,8 +11,11 @@ import java.util.List;
 public class TabunganController {
     private final TabunganService tabunganService;
 
-//    @Autowired
-//    private WebClient.Builder webClientBuilder;
+    @Autowired
+    private TabunganForward tabunganForward;
+
+    @Autowired
+    private Status status;
 
     @Autowired
     public TabunganController(TabunganService tabunganService) {
@@ -49,8 +48,6 @@ public class TabunganController {
     @PutMapping(path = "kurangi_saldo")
     @ResponseBody
     public HashMap<String, Object> kurangiSaldo(@RequestBody DataInput dataInput) {
-        System.out.println(dataInput.getNomorRekening());
-        System.out.println(dataInput.getJumlah());
         return tabunganService.kurangiSaldo(dataInput.getNomorRekening(), dataInput.getJumlah());
     }
 
@@ -60,51 +57,50 @@ public class TabunganController {
         return tabunganService.tambahSaldo(dataInput.getNomorRekening(), dataInput.getJumlah());
     }
 
-    @PostMapping(path = "transfer")
-    @ResponseBody
-    public HashMap<String, Object> transfer(@RequestBody DataInput dataInput) {
-//        boolean statusPengirim = true;
-//        boolean statusPenerima = true;
-
-        HashMap<String, Object> data = tabunganService.transfer(dataInput.getPengirim(), dataInput.getPenerima(), dataInput.getJumlah());
-        HashMap<String, Object> transaksi = new HashMap<>();
-
-        transaksi.put("nomorNasabah", dataInput.getPengirim());
-        transaksi.put("jenisTransaksi", 99);
-        transaksi.put("waktuTransaksi", LocalDateTime.now());
-        transaksi.put("statusTransaksi", 1);
-        transaksi.put("logTransaksi", "Log Transaksi - Tabungan");
-
-        WebClient client = WebClient.create("http://10.10.30.49:7007");
-        ResponseSpec responseSpec = client.post().uri("/api/transaksi")
-                                                    .body(Mono.just(transaksi), HashMap.class)
-                                                    .retrieve();
-
-        responseSpec.bodyToMono(HashMap.class).block();
-        return data;
-    }
-
     @PutMapping(path = "tarik_uang")
     @ResponseBody
     public HashMap<String, Object> tarikUang(@RequestBody DataInput dataInput) {
-        return tabunganService.tarikUang(dataInput.getNomorRekening(), dataInput.getJumlah());
+        HashMap<String, Object> response = tabunganService.tarikUang(dataInput.getNomorRekening(), dataInput.getJumlah());
+        Integer statusTransaksi = ((response.get("status").equals(status.getStatusSuccess())) ? 1 : 2);
+        tabunganForward.simpanTransaksi(dataInput.getNomorRekening(), 8, statusTransaksi, "[Tb] Mengambil uang sebesar " + dataInput.getJumlah());
+        return response;
     }
 
     @PutMapping(path = "tabung")
     @ResponseBody
     public HashMap<String, Object> tabung(@RequestBody DataInput dataInput) {
-        return tabunganService.tabung(dataInput.getNomorRekening(), dataInput.getJumlah());
+        HashMap<String, Object> response = tabunganService.tabung(dataInput.getNomorRekening(), dataInput.getJumlah());
+        Integer statusTransaksi = (response.get("status").equals(status.getStatusSuccess()) ? 1 : 2);
+        tabunganForward.simpanTransaksi(dataInput.getNomorRekening(), 1, statusTransaksi, "[Tb] Menabung sebesar " + dataInput.getJumlah());
+        return response;
     }
 
-//    @GetMapping(path = "test")
-//    public void test() {
-//        Object obj = webClientBuilder.build()
-//                .get()
-//                .uri("http://10.10.30.35:7006/kantor/validasiIdKantor/1")
-//                .retrieve()
-//                .bodyToMono(Object.class)
-//                .block();
-//        System.out.println(obj.toString());
-//    }
+    @PostMapping(path = "transfer")
+    @ResponseBody
+    public HashMap<String, Object> transfer(@RequestBody DataInput dataInput)
+    {
+        HashMap<String, Object> response = new HashMap<>();
+        Integer statusTransaksi;
+
+        Integer resultPengirim = tabunganForward.validasiNasabah(dataInput.getNomorRekeningPengirim());
+        if(!resultPengirim.equals(dataInput.getNomorRekeningPengirim())) {
+            return tabunganService.transferFailed(response, "pengirim", resultPengirim);
+        }
+        Integer resultPenerima = tabunganForward.validasiNasabah(dataInput.getNomorRekeningPenerima());
+        if(!resultPenerima.equals(dataInput.getNomorRekeningPenerima())) {
+            return tabunganService.transferFailed(response, "penerima", resultPenerima);
+        }
+        response = tabunganService.transfer(dataInput.getNomorRekeningPengirim(), dataInput.getNomorRekeningPenerima(), dataInput.getJumlah());
+        statusTransaksi = ((response.get("status").equals(status.getStatusSuccess())) ? 1 : 2);
+        tabunganForward.simpanTransaksi(dataInput.getNomorRekeningPengirim(),
+                3, statusTransaksi,
+                "[Tb] Mengirim uang ke " + dataInput.getNomorRekeningPenerima()
+                        + " sebesar " + dataInput.getJumlah());
+        tabunganForward.simpanTransaksi(dataInput.getNomorRekeningPenerima(),
+                2, statusTransaksi,
+                "[Tb] Menerima uang dari " + dataInput.getNomorRekeningPengirim()
+                        + " sebesar " + dataInput.getJumlah());
+        return response;
+    }
 
 }
