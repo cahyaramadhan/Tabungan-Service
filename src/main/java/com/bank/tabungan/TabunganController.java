@@ -32,17 +32,17 @@ public class TabunganController {
         tabunganService.addTabungan(tabungan);
     }
 
-    @DeleteMapping(path = "{nomor_nasabah}")
-    public void deleteTabungan(@PathVariable("nomor_nasabah") Integer nomorNasabah) {
-        tabunganService.deleteTabungan(nomorNasabah);
+    @DeleteMapping(path = "{nomor_rekening}")
+    public void deleteTabungan(@PathVariable("nomor_rekening") Integer nomorRekening) {
+        tabunganService.deleteTabungan(nomorRekening);
     }
 
-    @PutMapping(path = "{nomor_nasabah}")
+    @PutMapping(path = "{nomor_rekening}")
     public void updateTabungan(
-            @PathVariable("nomor_nasabah") Integer nomorNasabah,
+            @PathVariable("nomor_rekening") Integer nomorRekening,
             @RequestParam(required = false) Long jumlah,
             @RequestParam(required = false) String jenis) {
-        tabunganService.updateTabungan(nomorNasabah, jumlah, jenis);
+        tabunganService.updateTabungan(nomorRekening, jumlah, jenis);
     }
 
     @PutMapping(path = "kurangi_saldo")

@@ -26,18 +26,18 @@ public class TabunganService {
         tabunganRepository.save(tabungan);
     }
 
-    public void deleteTabungan(Integer nomorNasabah) {
-        boolean exists = tabunganRepository.existsById(nomorNasabah);
+    public void deleteTabungan(Integer nomorRekening) {
+        boolean exists = tabunganRepository.existsById(nomorRekening);
         if(!exists) {
-            throw new IllegalStateException("Tidak terdapat tabungan dengan nomor nasabah: " + nomorNasabah);
+            throw new IllegalStateException("Tidak terdapat tabungan dengan nomor nasabah: " + nomorRekening);
         }
-        tabunganRepository.deleteById(nomorNasabah);
+        tabunganRepository.deleteById(nomorRekening);
     }
 
     @Transactional
-    public void updateTabungan(Integer nomorNasabah, Long jumlah, String jenis) {
-        Tabungan tabungan = tabunganRepository.findById(nomorNasabah)
-                .orElseThrow(() -> new IllegalStateException("Tidak terdapat tabungan dengan nomor nasabah: " + nomorNasabah));
+    public void updateTabungan(Integer nomorRekening, Long jumlah, String jenis) {
+        Tabungan tabungan = tabunganRepository.findById(nomorRekening)
+                .orElseThrow(() -> new IllegalStateException("Tidak terdapat tabungan dengan nomor nasabah: " + nomorRekening));
 
         if(jumlah != null) {
             tabungan.setSaldo(jumlah);

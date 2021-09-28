@@ -23,7 +23,7 @@ public class TabunganForward {
                                 )
     {
         HashMap<String, Object> transaksi = new HashMap<>();
-        transaksi.put("nomorNasabah", nomorRekening);
+        transaksi.put("nomorRekening", nomorRekening);
         transaksi.put("jenisTransaksi", jenisTransaksi);
         transaksi.put("waktuTransaksi", LocalDateTime.now());
         transaksi.put("statusTransaksi", statusTransaksi);
