@@ -135,4 +135,9 @@ public class TabunganService {
         }
         return response;
     }
+
+    public Object getTabunganById(Integer nomorRekening) {
+        return tabunganRepository.findById(nomorRekening)
+                .orElseThrow(() -> new IllegalStateException("Tidak terdapat tabungan dengan nomor rekening: " + nomorRekening));
+    }
 }

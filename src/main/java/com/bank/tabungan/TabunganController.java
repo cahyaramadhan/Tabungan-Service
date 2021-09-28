@@ -27,6 +27,11 @@ public class TabunganController {
         return tabunganService.getTabungan();
     }
 
+    @GetMapping(path = "{nomor_rekening}")
+    public Object getTabunganById(@PathVariable("nomor_rekening") Integer nomorRekening) {
+        return tabunganService.getTabunganById(nomorRekening);
+    }
+
     @PostMapping
     public void addTabungan(@RequestBody Tabungan tabungan) {
         tabunganService.addTabungan(tabungan);
