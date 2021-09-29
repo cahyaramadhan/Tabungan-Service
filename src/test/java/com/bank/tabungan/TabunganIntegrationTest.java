@@ -20,7 +20,7 @@ public class TabunganIntegrationTest {
     private MockMvc mockMvc;
 
     @Test
-    public void testGetStatusKurangiSaldo() throws Exception {
+    public void testGetTabunganById() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders
                         .get("http://localhost:8080/tabungan/")
                         .param("nomorRekening", "1"))
