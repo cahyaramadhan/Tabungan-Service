@@ -38,31 +38,31 @@ public class TabunganIntegrationTest {
                 .andExpect(status().is(200));
     }
 
-//    @Test
-//    public void testTransferNegatif() throws Exception {
-//        HashMap<String, Object> requestBody = new HashMap<>();
-//        requestBody.put("nomorRekeningPengirim", 2);
-//        requestBody.put("nomorRekeningPenerima", 1);
-//        requestBody.put("jumlah", -10);
-//
-//        HashMap<String, Object> expectedResponse = new HashMap<>();
-//        expectedResponse.put("status", 433);
-//        expectedResponse.put("message", "Jumlah transfer tidak bisa negatif");
-//
-//
-//        ObjectMapper mapper = new ObjectMapper();
-//        mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
-//        ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
-//        String requestJson = ow.writeValueAsString(requestBody);
-//
-//        mockMvc.perform(MockMvcRequestBuilders
-//                        .post("http://localhost:7002/tabungan/transfer")
-//                        .contentType(MediaType.APPLICATION_JSON)
-////                        .content(objectMapper.writeValueAsString(requestBody)))
-//                        .content(requestJson))
-//                .andDo(print())
-////                .andExpect(status().isOk());
-//                .andExpect(content().string(objectMapper.writeValueAsString(expectedResponse)));
-//    }
+    @Test
+    public void testTransferNegatif() throws Exception {
+        HashMap<String, Object> requestBody = new HashMap<>();
+        requestBody.put("nomorRekeningPengirim", 2);
+        requestBody.put("nomorRekeningPenerima", 1);
+        requestBody.put("jumlah", -10);
+
+        HashMap<String, Object> expectedResponse = new HashMap<>();
+        expectedResponse.put("status", 433);
+        expectedResponse.put("message", "Jumlah transfer tidak bisa negatif");
+
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
+        ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
+        String requestJson = ow.writeValueAsString(requestBody);
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .post("https://tabungan-service.herokuapp.com/tabungan//transfer")
+                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(objectMapper.writeValueAsString(requestBody)))
+                        .content(requestJson))
+                .andDo(print())
+//                .andExpect(status().isOk());
+                .andExpect(content().string(objectMapper.writeValueAsString(expectedResponse)));
+    }
 
 }
