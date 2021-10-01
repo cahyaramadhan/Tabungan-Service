@@ -19,11 +19,6 @@ pipeline {
                     bat "mvn clean package"
                 }
         }
-        stage('Deploy') {
-            steps {
-                deploy adapters: [tomcat7(credentialsId: '8f6cdf40-a68a-4238-8016-049e05113e7f', path: '', url: 'http://localhost:8080/')], contextPath: null, war: '**/*.war'
-            }
-        }
         stage('Test') {
             steps {
                 bat "mvn test"
@@ -36,9 +31,10 @@ pipeline {
                 
             }
         }
-        stage('TestPostman') {
+        stage('Deploy') {
             steps {
-                bat "newman run tabungan.postman_collection.json --suppress-exit-code 1"
+                bat "heroku git:remote -a tabungan-service"
+                bat "git push -f heroku master"
             }
         }
     }
