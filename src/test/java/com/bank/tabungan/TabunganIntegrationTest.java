@@ -56,7 +56,7 @@ public class TabunganIntegrationTest {
         String requestJson = ow.writeValueAsString(requestBody);
 
         mockMvc.perform(MockMvcRequestBuilders
-                        .post("https://tabungan-service.herokuapp.com/tabungan//transfer")
+                        .post("https://tabungan-service.herokuapp.com/tabungan/transfer")
                         .contentType(MediaType.APPLICATION_JSON)
 //                        .content(objectMapper.writeValueAsString(requestBody)))
                         .content(requestJson))
