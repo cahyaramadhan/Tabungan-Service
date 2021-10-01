@@ -49,7 +49,6 @@ public class TabunganIntegrationTest {
 //        expectedResponse.put("status", 433);
 //        expectedResponse.put("message", "Jumlah transfer tidak bisa negatif");
 //
-//
 //        ObjectMapper mapper = new ObjectMapper();
 //        mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
 //        ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();

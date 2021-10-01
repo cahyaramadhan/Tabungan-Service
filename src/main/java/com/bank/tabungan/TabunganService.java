@@ -1,5 +1,7 @@
 package com.bank.tabungan;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +13,7 @@ import java.util.List;
 public class TabunganService {
     private final TabunganRepository tabunganRepository;
     private Status status;
+    Logger logger = LoggerFactory.getLogger(TabunganService.class);
 
     @Autowired
     public TabunganService(TabunganRepository tabunganRepository, Status status) {
@@ -51,7 +54,7 @@ public class TabunganService {
     @Transactional
     public HashMap<String, Object> tarikUang(Integer nomorRekening, Long jumlah) {
         HashMap<String, Object> response = kurangiSaldo(nomorRekening, jumlah);
-        if(response.get("status").equals(status.getStatusSuccess())) {
+        if(response.get("status").equals(status.CODE_SUCCESS)) {
             response.put("message", status.getMessageSuccessTarik(jumlah));
         }
         return response;
@@ -65,14 +68,14 @@ public class TabunganService {
         HashMap<String, Object> response = new HashMap<>();
 
         if(tabungan == null) {
-            response.put("status", status.getStatusRekeningNull());
-            response.put("message", status.getMessageRekeningNull(nomorRekening));
+            response.put("status", status.CODE_REKENING_NOT_FOUND);
+            response.put("message", status.getMessageRekeningNotFound(nomorRekening));
         } else if(jumlah > tabungan.getSaldo()) {
-            response.put("status", status.getStatusSaldoKurang());
-            response.put("message", status.getMessageSaldoKurang());
+            response.put("status", status.CODE_SALDO_KURANG);
+            response.put("message", status.MSG_SALDO_KURANG);
         } else {
             tabungan.setSaldo(tabungan.getSaldo() - jumlah);
-            response.put("status", status.getStatusSuccess());
+            response.put("status", status.CODE_SUCCESS);
             response.put("message", status.getMessageSuccessTarik(jumlah));
         }
         return response;
@@ -81,7 +84,7 @@ public class TabunganService {
     @Transactional
     public HashMap<String, Object> tabung(Integer nomorRekening, Long jumlah) {
         HashMap<String, Object> response = tambahSaldo(nomorRekening, jumlah);
-        if(response.get("status").equals(status.getStatusSuccess())) {
+        if(response.get("status").equals(status.CODE_SUCCESS)) {
             response.put("message", status.getMessageSuccessTabung(jumlah));
         }
         return response;
@@ -95,11 +98,11 @@ public class TabunganService {
         HashMap<String, Object> response = new HashMap<>();
 
         if(tabungan == null) {
-            response.put("status", status.getStatusRekeningNull());
-            response.put("message", status.getMessageRekeningNull(nomorRekening));
+            response.put("status", status.CODE_REKENING_NOT_FOUND);
+            response.put("message", status.getMessageRekeningNotFound(nomorRekening));
         } else {
             tabungan.setSaldo(tabungan.getSaldo() + jumlah);
-            response.put("status", status.getStatusSuccess());
+            response.put("status", status.CODE_SUCCESS);
             response.put("message", status.getMessageSuccessTabung(jumlah));
         }
         return response;
@@ -117,23 +120,24 @@ public class TabunganService {
         if(tabunganPengirim.getSaldo() >= jumlah && jumlah > 0) {
             tambahSaldo(tabunganPenerima.getNomorRekening(), jumlah);
             kurangiSaldo(tabunganPengirim.getNomorRekening(), jumlah);
-            response.put("status", status.getStatusSuccess());
+            response.put("status", status.CODE_SUCCESS);
             response.put("message", status.getMessageSuccessTransfer(pengirim, penerima, jumlah));
         } else if(jumlah < 0) {
             response.put("status", 433);
             response.put("message", "Jumlah transfer tidak bisa negatif");
+            logger.info("Jumlah transfer tidak bisa negatif");
         } else {
-            response.put("status", status.getStatusSaldoKurang());
-            response.put("message", status.getMessageSaldoKurang());
+            response.put("status", status.CODE_SALDO_KURANG);
+            response.put("message", status.MSG_SALDO_KURANG);
         }
         return response;
     }
 
     public HashMap<String, Object> transferFailed(HashMap<String, Object> response, String akun, Integer statusCode) {
         response.put("status", statusCode);
-        if(statusCode == status.getStatusAkunTidakTerdaftar()) {
+        if(statusCode == status.CODE_AKUN_TIDAK_TERDAFTAR) {
             response.put("message", "Akun " + akun + " tidak valid");
-        } else if (statusCode == status.getStatusAkunDiblokir()) {
+        } else if (statusCode == status.CODE_AKUN_DIBLOKIR) {
             response.put("message", "Akun " + akun + " diblokir");
         }
         return response;

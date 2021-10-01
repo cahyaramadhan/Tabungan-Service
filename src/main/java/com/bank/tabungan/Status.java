@@ -7,25 +7,18 @@ import org.springframework.stereotype.Component;
 @NoArgsConstructor
 public class Status {
 
-    public Integer getStatusSaldoKurang() {
-        return 431;
-    }
+    public static final int CODE_SALDO_KURANG = 431;
+    public static final int CODE_REKENING_NOT_FOUND = 432;
 
-    public Integer getStatusRekeningNull() {
-        return 432;
-    }
 
-    public int getStatusSuccess() { return 230; }
+    public static final int CODE_SUCCESS = 230;
 
-    public int getStatusAkunDiblokir() { return 412; }
+    public static final int CODE_AKUN_TIDAK_TERDAFTAR = 411;
+    public static final int CODE_AKUN_DIBLOKIR = 412;
 
-    public int getStatusAkunTidakTerdaftar() { return 411; }
+    public static final String MSG_SALDO_KURANG = "Saldo Kurang";
 
-    public String getMessageSaldoKurang() {
-        return "Saldo Kurang";
-    }
-
-    public String getMessageRekeningNull(Integer nomorRekening) {
+    public String getMessageRekeningNotFound(Integer nomorRekening) {
         return "Tidak terdapat tabungan dengan nomor rekening: " + nomorRekening;
     }
 

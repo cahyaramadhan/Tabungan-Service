@@ -1,5 +1,7 @@
 package com.bank.tabungan;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +19,8 @@ public class TabunganController {
     @Autowired
     private Status status;
 
+    Logger logger = LoggerFactory.getLogger(TabunganController.class);
+
     @Autowired
     public TabunganController(TabunganService tabunganService) {
         this.tabunganService = tabunganService;
@@ -24,6 +28,7 @@ public class TabunganController {
 
     @GetMapping
     public List<Tabungan> getTabungan() {
+        logger.info("Mengambil Tabungan dari db postgre");
         return tabunganService.getTabungan();
     }
 
@@ -66,7 +71,7 @@ public class TabunganController {
     @ResponseBody
     public HashMap<String, Object> tarikUang(@RequestBody DataInput dataInput) {
         HashMap<String, Object> response = tabunganService.tarikUang(dataInput.getNomorRekening(), dataInput.getJumlah());
-        Integer statusTransaksi = ((response.get("status").equals(status.getStatusSuccess())) ? 1 : 2);
+        Integer statusTransaksi = ((response.get("status").equals(status.CODE_SUCCESS)) ? 1 : 2);
         tabunganForward.simpanTransaksi(dataInput.getNomorRekening(), 8, statusTransaksi, "[Tb] Mengambil uang sebesar " + dataInput.getJumlah());
         return response;
     }
@@ -75,7 +80,7 @@ public class TabunganController {
     @ResponseBody
     public HashMap<String, Object> tabung(@RequestBody DataInput dataInput) {
         HashMap<String, Object> response = tabunganService.tabung(dataInput.getNomorRekening(), dataInput.getJumlah());
-        Integer statusTransaksi = (response.get("status").equals(status.getStatusSuccess()) ? 1 : 2);
+        Integer statusTransaksi = (response.get("status").equals(status.CODE_SUCCESS) ? 1 : 2);
         tabunganForward.simpanTransaksi(dataInput.getNomorRekening(), 1, statusTransaksi, "[Tb] Menabung sebesar " + dataInput.getJumlah());
         return response;
     }
@@ -96,7 +101,7 @@ public class TabunganController {
             return tabunganService.transferFailed(response, "penerima", resultPenerima);
         }
         response = tabunganService.transfer(dataInput.getNomorRekeningPengirim(), dataInput.getNomorRekeningPenerima(), dataInput.getJumlah());
-        statusTransaksi = ((response.get("status").equals(status.getStatusSuccess())) ? 1 : 2);
+        statusTransaksi = ((response.get("status").equals(status.CODE_SUCCESS)) ? 1 : 2);
         tabunganForward.simpanTransaksi(dataInput.getNomorRekeningPengirim(),
                 3, statusTransaksi,
                 "[Tb] Mengirim uang ke " + dataInput.getNomorRekeningPenerima()
