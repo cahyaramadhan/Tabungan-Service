@@ -114,11 +114,14 @@ public class TabunganService {
 
         HashMap<String, Object> response = new HashMap<>();
 
-        if(tabunganPengirim.getSaldo() >= jumlah) {
+        if(tabunganPengirim.getSaldo() >= jumlah && jumlah > 0) {
             tambahSaldo(tabunganPenerima.getNomorRekening(), jumlah);
             kurangiSaldo(tabunganPengirim.getNomorRekening(), jumlah);
             response.put("status", status.getStatusSuccess());
             response.put("message", status.getMessageSuccessTransfer(pengirim, penerima, jumlah));
+        } else if(jumlah < 0) {
+            response.put("status", 433);
+            response.put("message", "Jumlah transfer tidak bisa negatif");
         } else {
             response.put("status", status.getStatusSaldoKurang());
             response.put("message", status.getMessageSaldoKurang());
